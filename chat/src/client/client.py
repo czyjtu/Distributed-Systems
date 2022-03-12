@@ -3,7 +3,8 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 import socket 
 from constants import FORMAT, HEADER, DISCONNECT_MSG
-
+import signal 
+import sys
 
 class Client:
 
@@ -13,14 +14,15 @@ class Client:
 
     def start(self):
         self._start_log()
-        while True:
-            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-                s.connect(self.address)
-                
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            self._socket = s
+            signal.signal(signal.SIGINT, self._cleanup)
+            s.connect(self.address)
+            while True:                
                 msg = self.fetch_msg()
-                self.send_message(msg, s)
-
-                print(f"<< {s.recv(1024).decode(FORMAT)}")
+                if msg:
+                    self.send_message(msg, s)
+                    print(f"<< {s.recv(1024).decode(FORMAT)}")
 
     def send_message(self, msg, s):
         msg_length = len(msg)
@@ -33,6 +35,12 @@ class Client:
         msg = input(">> ")
         msg_encoded = msg.encode(FORMAT)
         return msg_encoded
+
+    def _cleanup(self, sig, frame):
+        self.send_message(DISCONNECT_MSG.encode(FORMAT), self._socket)
+        print("SHUTTING DOWN")
+        sys.exit(0)
+
  
     def _start_log(self):
         print("press 'ctr + c' to stop")
