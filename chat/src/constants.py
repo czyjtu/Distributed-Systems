@@ -2,4 +2,4 @@ FORMAT = 'utf-8'
 DISCONNECT_MSG = '--exit'
 MSG_LEN = 8000
 HEADER = 64
-PORT = 5050 
+PORT = 5051 
