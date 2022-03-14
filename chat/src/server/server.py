@@ -27,6 +27,8 @@ class Server:
             self._socket.setblocking(False)
             s.bind(self.address)
             s.listen()
+            self.udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            self.udp_socket.bind(self.address)
             self.listen()
 
     def listen(self):
@@ -37,10 +39,9 @@ class Server:
             except BlockingIOError:
                 continue
             handler = TCPHandler('SERVER', conn, self.clients_register)
-            thread = threading.Thread(target=handler.run)
-            thread.start()
-            self.threads.append(thread)
-            self.tcp_handlers[addr] = (handler, thread)
+            handler.start()
+            self.threads.append(handler)
+            self.tcp_handlers[addr] = handler
 
     def _cleanup(self, sig, frame):
         self._socket.close()

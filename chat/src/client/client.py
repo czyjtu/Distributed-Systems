@@ -1,20 +1,23 @@
-import logging 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+import logging
+from client.input_listener import InputHandler
+from client.tcp_listener import TCPListener 
 import socket 
 from constants import FORMAT, HEADER, DISCONNECT_MSG, MSG_LEN
 import signal 
 import sys
-from common.message import Message
-from common.msg_type import MsgType
+from common import Message, MsgType 
 import pickle 
+from client.message_writer import MsgWritter
 import threading 
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 class Client:
 
     def __init__(self, client_name, server_ip, server_port):
         self.address = (server_ip, server_port)
         self.name = client_name
+        self.msg_writer = MsgWritter()
 
     def start(self):
         self._start_log()
@@ -24,46 +27,35 @@ class Client:
             s.connect(self.address)
             self.fetch_username()
 
-            self.tcp_listen_thread = threading.Thread(target=self.receive_msg, args=(s, ))
-            self.tcp_listen_thread.start()
-            while True:                
-                msg = self.fetch_msg()
-                if msg:
-                    self.send_message(msg, s)
+            sock_lock = threading.Lock()
+            self.tcp_listener = TCPListener(self._socket, self.msg_writer, sock_lock)
+            self.input_hendler = InputHandler(self._socket, sock_lock)
+
+            self.tcp_listener.start()
+            self.input_hendler.start()
+
 
     def fetch_username(self) -> str:
         while True:
             name = input("Enter username: ")
             msg = Message(name, MsgType.REGISTER)
             self._socket.send(pickle.dumps(msg))
+            print("sent")
             received = self._socket.recv(MSG_LEN)
-            msg = pickle.loads(received)
-            if msg.type == MsgType.ACK:
-                break 
+            response = pickle.loads(received)
+            if response.type == MsgType.ACK:
+                break
         self.id = name 
 
-
-
-    def send_message(self, msg, s):
-        s.send(msg)
-    
-    def fetch_msg(self):
-        msg = input()
-        return pickle.dumps(Message(self.id, MsgType.TEXT, msg)) if msg else None
-
-    def receive_msg(self, s) -> Message:
-        s.setblocking(True)
-        while True:
-            received = pickle.loads(s.recv(MSG_LEN))
-            if received:
-                self.display_msg(received)
 
     def display_msg(self, msg):
         print(f"{msg.author}: {msg.text}")
 
     def _cleanup(self, sig, frame):
         msg = Message(self.id, MsgType.DISCONNECT)
-        self.send_message(pickle.dumps(msg), self._socket)
+        self._socket.send(pickle.dumps(msg))
+        self.tcp_listener.kill()
+        self.input_hendler.kill()
         print("SHUTTING DOWN")
         sys.exit(0)
 
