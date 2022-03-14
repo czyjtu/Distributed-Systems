@@ -18,11 +18,12 @@ class Client:
 
     def start(self):
         self._start_log()
-        self.fetch_username()
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             self._socket = s
             signal.signal(signal.SIGINT, self._cleanup)
             s.connect(self.address)
+            self.fetch_username()
+
             self.tcp_listen_thread = threading.Thread(target=self.receive_msg, args=(s, ))
             self.tcp_listen_thread.start()
             while True:                
@@ -31,15 +32,19 @@ class Client:
                     self.send_message(msg, s)
 
     def fetch_username(self) -> str:
-        name = input("Enter username: ")
-        self.id = name
+        while True:
+            name = input("Enter username: ")
+            msg = Message(name, MsgType.REGISTER)
+            self._socket.send(pickle.dumps(msg))
+            received = self._socket.recv(MSG_LEN)
+            msg = pickle.loads(received)
+            if msg.type == MsgType.ACK:
+                break 
+        self.id = name 
+
 
 
     def send_message(self, msg, s):
-        msg_length = len(msg)
-        send_length = str(msg_length).encode(FORMAT)
-        send_length += b' ' * (HEADER - len(send_length))
-        s.send(send_length)
         s.send(msg)
     
     def fetch_msg(self):
