@@ -18,6 +18,9 @@ class Client:
         self.address = (server_ip, server_port)
         self.name = client_name
         self.msg_writer = MsgWritter()
+        self.id = None
+        self.tcp_listener = None 
+        self.input_hendler = None 
 
     def start(self):
         self._start_log()
@@ -27,12 +30,15 @@ class Client:
             s.connect(self.address)
             self.fetch_username()
 
-            sock_lock = threading.Lock()
+            sock_lock = threading.RLock()
             self.tcp_listener = TCPListener(self._socket, self.msg_writer, sock_lock)
-            self.input_hendler = InputHandler(self._socket, sock_lock)
+            self.input_handler = InputHandler(self._socket, sock_lock, self.id)
 
             self.tcp_listener.start()
-            self.input_hendler.start()
+            self.input_handler.start()
+
+            self.tcp_listener.join()
+            self.input_handler.join()
 
 
     def fetch_username(self) -> str:
@@ -52,10 +58,10 @@ class Client:
         print(f"{msg.author}: {msg.text}")
 
     def _cleanup(self, sig, frame):
-        msg = Message(self.id, MsgType.DISCONNECT)
-        self._socket.send(pickle.dumps(msg))
-        self.tcp_listener.kill()
-        self.input_hendler.kill()
+        if self.tcp_listener:
+            self.tcp_listener.kill()
+        if self.input_handler:
+            self.input_handler.kill()
         print("SHUTTING DOWN")
         sys.exit(0)
 

@@ -4,6 +4,7 @@ from constants import MSG_LEN
 import pickle 
 from common import MsgType, Message
 from common.stoppable_thread import StoppableThread
+import sys
  
 logger = logging.getLogger(__name__)
 
@@ -18,13 +19,19 @@ class TCPListener(threading.Thread):
 
     def run(self):
         logger.info(f"Starting ...")
-        self.receive_msg()
+        self.listen_for_messages()
+        sys.exit(0)
 
-    def receive_msg(self) -> Message:
+    def listen_for_messages(self) -> Message:
         self._socket.setblocking(True)
         while True:
             self._lock.acquire()
-            received = pickle.loads(self._socket.recv(MSG_LEN))
-            self.lock.release()
+            try:
+                received = self._socket.recv(MSG_LEN)
+            except ConnectionError as e:
+                logger.error(e)
+                break
+            finally:
+                self._lock.release()
             logger.debug(f"Received message {received}")
             self._writer.display(received)

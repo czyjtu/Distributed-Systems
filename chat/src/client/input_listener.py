@@ -8,11 +8,12 @@ logger = logging.getLogger(__name__)
 
 
 class InputHandler(threading.Thread):
-    def __init__(self, sock, lock):
+    def __init__(self, sock, lock, name):
         threading.Thread.__init__(self)
 
         self._socket = sock 
         self._lock = lock
+        self.id = name 
 
     def run(self):
         logger.debug(f"running ...")
