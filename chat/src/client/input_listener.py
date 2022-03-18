@@ -2,32 +2,49 @@ import threading
 import logging
 import pickle 
 from common import Message, MsgType
-from constants import MSG_LEN
+from constants import MSG_LEN, DISCONNECT_MSG
 from common.stoppable_thread import StoppableThread
 logger = logging.getLogger(__name__)
 
 
-class InputHandler(threading.Thread):
-    def __init__(self, sock, lock, name):
-        threading.Thread.__init__(self)
-
+class InputHandler(StoppableThread):
+    def __init__(self, sock, dgram, server_addr, name):
+        super().__init__(self)
         self._socket = sock 
-        self._lock = lock
+        self._dgram_socket = dgram
+        self.serv_addr = server_addr
         self.id = name 
 
     def run(self):
         logger.debug(f"running ...")
-        while True:                
+        while not self.stopped():                
             msg = self.fetch_msg()
             if msg:
                 self.send_message(msg)
 
     def send_message(self, msg):
         logger.debug(f"sending msg to {self._socket}: {msg}")
-        self._lock.acquire()
-        self._socket.send(msg)
-        self._lock.release()
+        try:
+            self._socket.send(msg)
+        except ConnectionError:
+            logger.error(f"message can't be sent due to broken connection")
+            self.stop()
+
+    def send_udp(self, msg):
+        self._dgram_socket.send
 
     def fetch_msg(self):
-        msg = input()
-        return pickle.dumps(Message(self.id, MsgType.TEXT, msg)) if msg else None
+        try:
+            msg = input()
+        except EOFError:
+            return None 
+        if not msg:
+            return None 
+        if msg == DISCONNECT_MSG:
+            self.stop()
+            return pickle.dumps(Message(self.id, MsgType.DISCONNECT, msg))
+        if msg.startswith('--U'):
+            msg = pickle.dumps(Message(self.id, MsgType.TEXT, msg[3:]))
+            self._dgram_socket.sendto(msg, self.serv_addr)
+            return None
+        return pickle.dumps(Message(self.id, MsgType.TEXT, msg)) 

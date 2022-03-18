@@ -4,32 +4,44 @@ import pickle
 from common import MsgType, Message  
 from common.stoppable_thread import StoppableThread
 logger = logging.getLogger(__name__)
+import sys
 
-class TCPHandler(StoppableThread):
+
+class TCPUserHandler(StoppableThread):
     def __init__(self, name, sock, register: dict):
         super().__init__(self)
         self.id = name 
         self._socket = sock 
         self.register = register 
+        self._socket.setblocking(True)
+
         
     def run(self):
         logger.info(f"[{self.id}] running ...")
-        self._socket.setblocking(False)
-        connected = True 
+        self._socket.settimeout(60)
         while not self.stopped():
-            received = self._socket.recv(MSG_LEN)
+            try:
+                received = self._socket.recv(MSG_LEN)
+            except ConnectionError as e:
+                logger.error(e)
+                break
             msg = pickle.loads(received)
             logger.info(f"got message {msg}")
-
-            if msg.type == MsgType.REGISTER or msg.author not in self.register:
-                self.register_client(msg)
-            elif msg.type == MsgType.TEXT:
-                self.broadcast(msg)
-            elif msg.type == MsgType.DISCONNECT:
-                self.stop()
-            else:
-                pass 
+            self.handle_message(msg)
+        self._socket.close()
         logger.info(f"DISCONNECTED FROM CLIENT {self._socket}")
+        sys.exit(0)
+
+
+    def handle_message(self, msg: Message):
+        if msg.type == MsgType.REGISTER or msg.author not in self.register:
+            self.register_client(msg)
+        elif msg.type == MsgType.TEXT:
+            self.broadcast(msg)
+        elif msg.type == MsgType.DISCONNECT:
+            self.stop()
+        else:
+            logger.info(f"Don't know how to handle message of type {msg.type}")
     
     def register_client(self, msg):
         logger.info(f"registering new client {self._socket}")

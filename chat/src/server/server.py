@@ -3,8 +3,9 @@ import threading
 import logging
 import signal 
 import sys
-from server.tcp_handler import TCPHandler 
-
+from server.tcp_handler import TCPUserHandler
+from constants import MSG_LEN 
+import pickle 
 
 logger = logging.getLogger('SERVER')
 logger.setLevel(logging.DEBUG)
@@ -17,35 +18,56 @@ class Server:
         self.clients_register: dict[str, socket.socket] = dict()
         self.tcp_handlers = dict()
         self.threads = []
+        self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
+        self.udp_addresses = set()
+        self.dgram_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.dgram_connected = True
+        self.udp_thread = threading.Thread(target=self.dgram_connection, args=(self.dgram_connected, ))
 
-    def start(self, max_threads=3):
+        signal.signal(signal.SIGINT, self._cleanup)
+
+    def start(self):
         logger.info("starting ...")
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            signal.signal(signal.SIGINT, self._cleanup)
-            self._socket = s
-            self._socket.setblocking(False)
-            s.bind(self.address)
-            s.listen()
-            self.udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            self.udp_socket.bind(self.address)
-            self.listen()
+        self._socket.setblocking(False)
+        self._socket.bind(self.address)
+        self.dgram_socket.bind(self.address)
+        self.udp_thread.start()
+        self.accept_users()
 
-    def listen(self):
+    def accept_users(self):
+        self._socket.listen()
         logger.info("listening ...")
         while True:
             try: 
                 conn, addr = self._socket.accept()
             except BlockingIOError:
                 continue
-            handler = TCPHandler('SERVER', conn, self.clients_register)
+            except:
+                break
+            handler = TCPUserHandler('SERVER', conn, self.clients_register)
             handler.start()
             self.threads.append(handler)
             self.tcp_handlers[addr] = handler
 
+    def dgram_connection(self, connected):
+        logger.info("Starting dgram connection")
+        while self.dgram_connected:
+            data, address = self.dgram_socket.recvfrom(MSG_LEN)
+            # msg = data.decode('utf-8')
+            logging.info(f"Received UDP message from the {address} {data}")
+            msg = pickle.loads(data)
+            for client_id, client_socket in self.clients_register.items():
+                if client_id == msg.author:
+                    continue 
+                client_socket.send(pickle.dumps(msg))
+
+
     def _cleanup(self, sig, frame):
-        self._socket.close()
         for i, th in enumerate(self.threads):
-            print(f"thread {i} stopped: {th.stop()}")
+            th.stop()
+            print(f"thread {i} stopped")
+        self.dgram_connected = False
+        self.udp_thread.join(3)
+        self._socket.close()
         print("SHUTTING DOWN")
-        sys.exit(0)

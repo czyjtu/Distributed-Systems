@@ -9,11 +9,12 @@ import sys
 logger = logging.getLogger(__name__)
 
 
-class TCPListener(StoppableThread):
-    def __init__(self, sock, msg_writer):
+class UDPListener(StoppableThread):
+    def __init__(self, sock, msg_writer, addr):
         super().__init__(self)
         self._socket = sock
         self._writer = msg_writer
+        self.addr = addr
 
     def run(self):
         logger.info(f"Starting ...")
@@ -22,12 +23,14 @@ class TCPListener(StoppableThread):
 
     def listen_for_messages(self) -> Message:
         self._socket.setblocking(True)
-        while not self.stopped():
+        while True:
+            if self.stopped():
+                return
             try:
-                received = self._socket.recv(MSG_LEN)
-                msg = pickle.loads(received)
-            except (ConnectionError, EOFError) as e:
+                received, addr = self._socket.recvfrom(MSG_LEN)
+            except ConnectionError as e:
                 logger.error(e)
                 break
+            msg = pickle.loads(received)
             logger.debug(f"Received message {msg}")
             self._writer.display(msg)
