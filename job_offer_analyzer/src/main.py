@@ -27,7 +27,7 @@ async def root(query: QueryData):
 def main():
     query = QueryData(query="python", location="London", job_type=JobType.FULL_TIME)
     for api in API_LIST:
-        pprint(api.get_offers(query))
+        pprint(len(api.get_offers(query)))
 
 
 if __name__ == "__main__":
