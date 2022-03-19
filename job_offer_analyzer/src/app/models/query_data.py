@@ -4,11 +4,11 @@ from enum import Enum, auto
 
 
 class JobType(Enum):
-    part_time: auto()
-    full_time: auto()
+    PART_TIME = auto()
+    FULL_TIME = auto()
 
 
 class QueryData(BaseModel):
     query: str
-    location: Optional[str]
+    location: str
     job_type: JobType
