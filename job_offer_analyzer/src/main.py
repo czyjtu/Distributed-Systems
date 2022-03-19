@@ -26,9 +26,15 @@ async def root(query: QueryData):
 
 def main():
     query = QueryData(query="python", location="London", job_type=JobType.FULL_TIME)
+    
+    offers = []
     for api in API_LIST:
-        pprint(len(api.get_offers(query)))
+        offers += api.get_offers(query)
 
+    analyzer = OffersAnalyzer(offers)
+    cmmn = analyzer.common_words
+    print(cmmn)
+    # cmmn.to_csv("test.csv")
 
 if __name__ == "__main__":
     main()
