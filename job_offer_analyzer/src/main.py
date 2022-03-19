@@ -4,6 +4,7 @@ from app.external.reed import ReedOffers
 from app.external.base import IOfferGetter
 from app.models.query_data import QueryData
 from app.analyzer import OffersAnalyzer
+from app.config import CONFIG
 
 API_LIST: list[IOfferGetter] = [ReedOffers()]
 
@@ -21,3 +22,9 @@ async def root(query: QueryData):
     }
     
     return response
+
+def main():
+    print(CONFIG['reed_api_key'])
+
+if __name__ == '__main__':
+    main()
