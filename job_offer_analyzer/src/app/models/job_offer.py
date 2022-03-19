@@ -6,3 +6,7 @@ class JobOffer(BaseModel):
     salary_lb: int 
     salary_ub: int 
     title: str 
+    salary_type: str 
+    currency: str
+    employer: str
+    
