@@ -9,7 +9,7 @@ from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
 
 from app.utils import prepare_response
- 
+
 API_LIST: list[IOfferGetter] = [ReedOffers()]
 
 app = FastAPI()
@@ -23,12 +23,23 @@ async def get_form(request: Request):
 
 
 @app.post("/analyze", response_class=HTMLResponse)
-async def root(request: Request, keywords: str = Form(None), location: str = Form(None), part_time: bool = Form(False)):
-    query = QueryData(query=keywords, location=location, job_type=(JobType.FULL_TIME if not part_time else JobType.PART_TIME))
-    offers = list(
-        it.chain.from_iterable(map(lambda api: api.get_offers(query), API_LIST))
+async def root(
+    request: Request,
+    keywords: str = Form(None),
+    location: str = Form(None),
+    part_time: bool = Form(False),
+):
+    query = QueryData(
+        query=keywords,
+        location=location,
+        job_type=(JobType.FULL_TIME if not part_time else JobType.PART_TIME),
     )
+    # offers = list(
+    #     it.chain.from_iterable(map(lambda api: api.get_offers(query), API_LIST))
+    # )
+    offers = await API_LIST[0].get_offers(query)
     analyzer = OffersAnalyzer(offers)
     response = prepare_response(analyzer)
-    return templates.TemplateResponse("form.html", {"request": request, "response": response})
-
+    return templates.TemplateResponse(
+        "form.html", {"request": request, "response": response}
+    )

@@ -18,7 +18,7 @@ def save_response(response, path: Path):
     except Exception as e:
         warnings.warn(f"Cannot save given response in .json due to error: {e}")
         with open(path / (fname + ".txt"), "w") as f:
-            f.write(response.text)
+            f.write(response.text())
 
 def prepare_response(analyzer: OffersAnalyzer) -> dict:
     response = {
