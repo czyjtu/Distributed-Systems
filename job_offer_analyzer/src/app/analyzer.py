@@ -21,12 +21,14 @@ class OffersAnalyzer:
     def __init__(self, offers: list[JobOffer]):
         self.offers = offers
         self._df = pd.DataFrame([dict(o) for o in offers])
+        self._salary_preprocessing()
+        self._description_preprocessing()
 
         # stats placeholders
         self._mean_salary = None
-        self._std_salary = None 
+        self._std_salary = None
         self._words_counter = None
-        self._salary_extreme = None 
+        self._salary_extreme = None
 
         # text preprocessing utils
         self._lemmatizer = WordNetLemmatizer()
@@ -34,42 +36,36 @@ class OffersAnalyzer:
         self._stop = stopwords.words("english") + other_stop_words
         self._stop += [self._ps.stem(word) for word in self._stop]
         self._stop = set(self._stop)
+        self._salary_preprocessing()
 
     @property
     def salary_mean(self) -> tuple[int, int]:
         if self._mean_salary is None:
-            self._mean_salary = self.get_salary_mean()
+            self._mean_salary = int(self._df["salary_lb"].mean()), int(
+                self._df["salary_ub"].mean()
+            )
         return self._mean_salary
 
     @property
     def salary_std(self) -> tuple[int, int]:
         if self._std_salary is None:
-            self._std_salary = self.get_salary_std()
+            self._std_salary = self._df["salary_lb"].std(), self._df["salary_ub"].std()
         return self._std_salary
 
-    @property 
+    @property
     def salary_extreme(self) -> tuple[int, int]:
-        return int(self._df['salary_lb'].min()), int(self._df['salary_ub'].max())
+        return int(self._df["salary_lb"].min()), int(self._df["salary_ub"].max())
 
     @property
     def common_words(self):
         if self._words_counter is None:
-            self._words_counter = self.get_words_histogram()
-        return list(self._words_counter.items())  # [word for word, _ in self._words_counter[:20]]
-
-    def get_salary_mean(self):
-        return int(self._df["salary_lb"].mean()), int(self._df["salary_ub"].mean())
-
-    def get_salary_std(self):
-        return self._df["salary_lb"].std(), self._df["salary_ub"].std()
-
-    def get_words_histogram(self):
-        self._description_preprocessing()
-        return self._df["description"].str.split(expand=True).stack().value_counts()
+            self._words_counter = (
+                self._df["description"].str.split(expand=True).stack().value_counts()
+            )
+        return list(self._words_counter.items())
 
     def _salary_preprocessing(self):
-        # TODO: convert salary to the same currency and remove constracts
-        pass
+        self._df.drop(self._df[self._df.salary_type != "per annum"].index, inplace=True)
 
     def _description_preprocessing(self):
         self._df["description"] = self._df["description"].apply(lambda x: x.lower())
@@ -81,9 +77,12 @@ class OffersAnalyzer:
             lambda x: " ".join([self._lemmatizer.lemmatize(word) for word in x.split()])
         )
         self._df["description"] = self._df["description"].apply(
-            lambda x: " ".join(x for x in x.split() if self._ps.stem(x) not in self._stop)
+            lambda x: " ".join(
+                x for x in x.split() if self._ps.stem(x) not in self._stop
+            )
         )
         # TODO: use sklearn and naive bayess to determine most important features
+
 
 other_stop_words = [
     "job",
@@ -105,5 +104,5 @@ other_stop_words = [
     "engineer",
     "looking",
     "stack",
-    "benefit"
+    "benefit",
 ]
