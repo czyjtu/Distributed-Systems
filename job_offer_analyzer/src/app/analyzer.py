@@ -21,8 +21,6 @@ class OffersAnalyzer:
     def __init__(self, offers: list[JobOffer]):
         self.offers = offers
         self._df = pd.DataFrame([dict(o) for o in offers])
-        self._salary_preprocessing()
-        self._description_preprocessing()
 
         # stats placeholders
         self._mean_salary = None
@@ -37,6 +35,7 @@ class OffersAnalyzer:
         self._stop += [self._ps.stem(word) for word in self._stop]
         self._stop = set(self._stop)
         self._salary_preprocessing()
+        self._description_preprocessing()
 
     @property
     def salary_mean(self) -> tuple[int, int]:
