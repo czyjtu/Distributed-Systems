@@ -21,7 +21,6 @@ class ReedOffers(IOfferGetter):
     async def get_offers(self, query: QueryData) -> list[JobOffer]:
         search_url = self._job_search_url(query)
         async with aiohttp.ClientSession(auth=self._auth) as session:
-            # response = self._get_response(search_url)
             offers_json = await self._get_response(session, search_url)
             offers_ids = [o["jobId"] for o in offers_json["results"]]
 
@@ -37,7 +36,7 @@ class ReedOffers(IOfferGetter):
         offers = [
             self._build_job_offer(o)
             for o in offers_details_jsons
-            if isinstance(o, dict) # skip exceptions
+            if isinstance(o, dict)  # skip exceptions
         ]
         # skip offers with missing data
         offers_filtered = list(filter(None, offers))
@@ -45,8 +44,6 @@ class ReedOffers(IOfferGetter):
 
     async def _get_response(self, session, url, save=False):
         async with session.get(url) as response:
-            # if save:
-            #     save_response(response, ROOT_PATH.parent / "data/reed")
             if response.status != HTTPStatus.OK:
                 print(await response.text())
                 raise ResponseStatusError(response.status)
@@ -57,7 +54,7 @@ class ReedOffers(IOfferGetter):
             offer = JobOffer(
                 description=offer_dict["jobDescription"],
                 salary_lb=offer_dict["minimumSalary"],
-                salary_ub="ala",  # offer_dict["maximumSalary"],
+                salary_ub=offer_dict["maximumSalary"],
                 salary_type=offer_dict["salaryType"],
                 currency=offer_dict["currency"],
                 title=offer_dict["jobTitle"],
