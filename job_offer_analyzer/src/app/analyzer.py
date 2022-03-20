@@ -61,7 +61,7 @@ class OffersAnalyzer:
         return int(self._df["salary_lb"].mean()), int(self._df["salary_ub"].mean())
 
     def get_salary_std(self):
-        return int(self._df["salary_lb"].std()), int(self._df["salary_ub"].std())
+        return self._df["salary_lb"].std(), self._df["salary_ub"].std()
 
     def get_words_histogram(self):
         self._description_preprocessing()

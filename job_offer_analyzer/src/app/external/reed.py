@@ -1,6 +1,6 @@
 from app import ROOT_PATH
 from app.external.base import IOfferGetter
-from app.external.utils import save_response
+from app.utils import save_response
 from app.models import JobOffer, QueryData, JobType
 from app.config import CONFIG
 from http import HTTPStatus
