@@ -26,15 +26,16 @@ async def get_form(request: Request):
 @app.post("/analyze", response_class=HTMLResponse)
 async def root(
     request: Request,
-    keywords: str = Form(None),
-    location: str = Form(None),
-    part_time: bool = Form(False),
+    keywords: str = Form(''),
+    location: str = Form(''),
+    part_time: bool = Form(False)
 ):
     query = QueryData(
         query=keywords,
         location=location,
         job_type=(JobType.FULL_TIME if not part_time else JobType.PART_TIME),
     )
+    print(query)
     # offers = list(
     #     it.chain.from_iterable(map(lambda api: api.get_offers(query), API_LIST))
     # )

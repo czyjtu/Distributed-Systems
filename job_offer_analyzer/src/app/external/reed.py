@@ -20,9 +20,10 @@ class ReedOffers(IOfferGetter):
 
     async def get_offers(self, query: QueryData) -> list[JobOffer]:
         search_url = self._job_search_url(query)
+        print("reed api url", search_url)
         async with aiohttp.ClientSession(auth=self._auth) as session:
             offers_json = await self._get_response(session, search_url)
-            offers_ids = [o["jobId"] for o in offers_json["results"]]
+            offers_ids = [o["jobId"] for o in offers_json["results"][: self.max_results]]
 
             details_url = self.base_url + "jobs/{}"
             tasks = [
@@ -70,7 +71,7 @@ class ReedOffers(IOfferGetter):
         is_full_time = query.job_type == JobType.FULL_TIME
         params = (
             f"?keywords={query.query}"
-            f"&location={query.location}"
+            f"&locationName={query.location}"
             f"&partTime={is_part_time}"
             f"&fullTime={is_full_time}"
             f"&resultsToTake={self.max_results}"

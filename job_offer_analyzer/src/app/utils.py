@@ -22,6 +22,7 @@ def save_response(response, path: Path):
 
 def prepare_response(analyzer: OffersAnalyzer) -> dict:
     response = {
+        "num_offers": len(analyzer._df),
         "salary": {
             "min_mean": analyzer.salary_mean[0],
             "max_mean": analyzer.salary_mean[1],
