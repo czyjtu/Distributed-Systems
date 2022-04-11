@@ -2,7 +2,7 @@ import pika, sys, time, pickle
 from pika.exchange_type import ExchangeType
 from pika.adapters.blocking_connection import BlockingChannel
 
-from common import CONFIRM_ECHANGE_ID, ORDER_ECHANGE_ID, HOST
+from common import CONFIRM_ECHANGE_ID, ORDER_ECHANGE_ID, HOST, Order
 
 
 class Supllier:
@@ -47,19 +47,26 @@ class Supllier:
 
     def handle_order(self, channel, method, properties, body):
         order = pickle.loads(body)
-        print(f"got order for {order.consumer} for {order.item}")
+        print(f"got order from {order.consumer} for {order.item}")
 
         order.supplier = self._id 
         order.process_id = self._orders_count
         self._orders_count += 1
         self._produce(order.item)
-
+        self._notify(order)
         print("sending ack")
         channel.basic_ack(delivery_tag=method.delivery_tag)
 
     def _produce(self, item: str):
         print(f"producing {item} ...")
         time.sleep(3)
+
+    def _notify(self, order: Order):
+        self._channel.basic_publish(
+            exchange=CONFIRM_ECHANGE_ID, 
+            routing_key=f"{CONFIRM_ECHANGE_ID}.{order.consumer}",
+            body=pickle.dumps(order)
+        )
 
 
 if __name__ == '__main__':
