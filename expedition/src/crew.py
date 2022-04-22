@@ -20,13 +20,14 @@ def main():
             item_name = input("what do you need?: ")
             if item_name == EXIT_CMD:
                 break 
-            
-            order = Order(crew_id, item_name)
-            channel.basic_publish(
-                exchange=ORDER_ECHANGE_ID, 
-                routing_key=f"{ORDER_ECHANGE_ID}.{item_name}",
-                body=pickle.dumps(order)
-            )
+            items = item_name.split()
+            for item in items:
+                order = Order(crew_id, item)
+                channel.basic_publish(
+                    exchange=ORDER_ECHANGE_ID, 
+                    routing_key=f"{ORDER_ECHANGE_ID}.{item}",
+                    body=pickle.dumps(order)
+                )
         listen_thread.join()
 
 def listen(connection, crew_id):

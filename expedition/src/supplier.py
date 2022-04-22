@@ -51,6 +51,7 @@ class Supllier:
 
         order.supplier = self._id 
         order.process_id = self._orders_count
+        order.supllier = self._id
         self._orders_count += 1
         self._produce(order.item)
         self._notify(order)
@@ -59,7 +60,7 @@ class Supllier:
 
     def _produce(self, item: str):
         print(f"producing {item} ...")
-        time.sleep(3)
+        time.sleep(5)
 
     def _notify(self, order: Order):
         self._channel.basic_publish(
