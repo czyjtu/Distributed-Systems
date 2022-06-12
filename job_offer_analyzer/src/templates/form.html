@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Job Form</title>
+</head>
+<body>
+<form method="post" action="/analyze">
+    <label for="keywords">what job are you looking for?</label><br>
+    <input type="text" name="keywords"/><br>
+    <label for="location">where?</label><br>
+    <input type="text" name="location"/><br>
+    <input type="checkbox" name="part_time" value="part_time_job"/>
+    <label for="part_time">part time job</label><br>
+    <input type="submit">
+</form>
+
+    <p>Salary stats from {{response.num_offers}} offers:<br>
+        ranges: {{response.salary.extreme}}<br>
+        minimum salary mean: {{response.salary.min_mean}}<br>
+        maximum salary mean: {{response.salary.max_mean}}<br>
+        minimum salary std: {{response.salary.min_std}}<br>
+        maximum salary std: {{response.salary.max_std}}<br>
+    </p>
+    <ul>
+    {% for word in response.word_list %}
+        <li>{{ word }}</li>
+    {% endfor %}
+    </ul>
+
+</body>
+</html>
