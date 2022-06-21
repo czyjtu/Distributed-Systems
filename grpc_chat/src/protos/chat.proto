@@ -1,0 +1,38 @@
+syntax = "proto3";
+
+message ChatMessage {
+    string msg = 1;
+    string userId = 2;
+    uint32 priority = 3;
+    Multimedia attachment = 4;
+    uint32 repliesTo = 5;
+}
+
+message Multimedia {
+    string mime = 1;
+    bytes data = 2;
+}
+
+service GroupManager {
+    rpc JoinGroup(JoinRequest) returns (StatusResponse) {}
+    rpc GetMessages(GetMessagesRequest) returns (stream ChatMessage) {}
+    rpc SendMessage(ChatMessage) returns (StatusResponse) {}
+}
+
+message JoinRequest {
+    string userId = 1;
+    string groupId = 2;
+}
+
+message StatusResponse {
+    enum Status {
+        NOT_OK = 0;
+        OK = 1;
+    }
+    Status status = 1;
+    string info = 2;
+}
+
+message GetMessagesRequest {
+    string userId = 1;
+}
