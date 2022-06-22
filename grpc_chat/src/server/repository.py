@@ -13,8 +13,8 @@ class MessageRepository:
         #     with open(cache_path, "r") as f:
         #         cache = json.load(f)
 
-        self._data: dict[str, list[ChatMessage]] = defaultdict(cache, list)
-        self._client_position: dict[str:int] = defaultdict(0)
+        self._data: dict[str, list[ChatMessage]] = defaultdict(list, cache)
+        self._client_position: dict[str:int] = defaultdict(lambda: 0)
 
     def get_messages(self, group_id: str) -> list[ChatMessage]:
         return self._data.get(group_id, [])
@@ -26,7 +26,8 @@ class MessageRepository:
         last_msg_pos = len(self._data[group_id])
         current_pos = self._client_position[client_id]
         result = self._data[group_id][current_pos:last_msg_pos]
-        return [msg for msg in result if msg.sender_id != client_id]
+        self._client_position[client_id] = last_msg_pos
+        return [msg for msg in result if msg.userId != client_id]
 
     def save(self) -> None:
         raise NotImplementedError

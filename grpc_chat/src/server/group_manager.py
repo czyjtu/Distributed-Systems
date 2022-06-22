@@ -14,12 +14,19 @@ class GroupManager(GroupManagerServicer):
 
 
     def JoinGroup(self, request, context):
+        logger.debug(f"{type(request)}: \n{request}")
+
         if request.userId in self._group_members:
+            logger.debug(f"Refused - user connected in {self._group_members[request.userId]}")
+
             return StatusResponse(
                 status=StatusResponse.Status.NOT_OK,
                 info=f"user alread belongs to group {self._group_members[request.userId]}",
             )
+
         self._group_members[request.userId] = request.groupId
+        logger.debug(f"Joined - user connected in {self._group_members[request.userId]}")
+
         return StatusResponse(
             status=StatusResponse.Status.OK,
             info=f"",
@@ -27,22 +34,32 @@ class GroupManager(GroupManagerServicer):
 
 
     def GetMessages(self, request, context):
+        logger.debug(f"{type(request)}: \n\t{request}")
+
         if request.userId not in self._group_members:
+            print("returned")
             return
 
         while True:
             messages = self._repo.fetch_messages(request.userId, self._group_members[request.userId])
             for msg in messages:
+                print(f"yielded: {msg}")
                 yield msg
 
 
     def SendMessage(self, request, context):
+        logger.debug(f"{type(request)}: \n\t{request}")
+
         if request.userId not in self._group_members:
+            logger.debug(f"unknown user - Refused")
+
             return StatusResponse(
-                status=StatusResponse.NOT_OK,
+                status=StatusResponse.Status.NOT_OK,
                 info=f"user don't belong to any group"    
             )
         self._repo.add_message(self._group_members[request.userId], request)
+        logger.debug(f"Message added to the chat")
+
         return StatusResponse(
             status=StatusResponse.Status.OK,
             info=f"",
