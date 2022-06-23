@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package cv;
+
+service EdgeDetection {
+    rpc canny(NpArray) returns (NpArray) {}
+}
+
+service Segmentation {
+    rpc kmeans(KmeansRequest) returns (NpArray) {}
+}
+
+message NpArray {
+    bytes data = 1;
+    uint32 rows = 2;
+    uint32 cols = 3;
+}
+
+message KmeansRequest {
+    NpArray img = 1;
+    uint32 k = 2;
+}
+
