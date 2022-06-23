@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package demo;
+
+
+service hello {
+    rpc SayHello(Empty) returns (Response) {}
+}
+
+service greetings {
+    rpc Greetings(Empty) returns (Response) {}
+}
+
+message Empty {
+
+}
+
+message Response {
+    string text = 1;
+}

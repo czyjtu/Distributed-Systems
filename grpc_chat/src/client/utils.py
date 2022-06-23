@@ -1,13 +1,17 @@
 from threading import Thread
-from gen.chat_pb2 import GetMessagesRequest, JoinRequest, ChatMessage
+from gen.chat_pb2 import GetMessagesRequest, JoinRequest, ChatMessage, Multimedia
 import grpc
 from gen.chat_pb2_grpc import GroupManagerStub
 from server.const import PORT_NUMBER
-import tkinter as tk 
-from tkinter import Tk, Text, Label, Button
-import sys 
+import sys, signal
 
 RUNNING = True
+HISTORY = []
+
+def display_msg(msg):
+    multimedia = len(msg.attachment.mime) > 0
+    print(f"id={msg.processedAt} | user={msg.userId} | reply={msg.repliesTo} | {msg.msg} | attachment={multimedia}")
+    print()
 
 def join(stub, group_id: str, usr_id: str):
     print(f"{usr_id} wants to join {group_id}")
@@ -19,59 +23,62 @@ def join(stub, group_id: str, usr_id: str):
     print(status)
 
 
-def send_msg(stub, text: str, usr_id: str):
+def send_msg(stub, text: str, usr_id: str, reply_idx: int=0, multimedia: bytes=b"\0", mime: str=""):
+    def find_in_history(last_idx: int):
+        ordered_hist = sorted(HISTORY, key=lambda msg: msg.processedAt)
+        return ordered_hist[last_idx]
+
+    replies_to = find_in_history(reply_idx).processedAt if reply_idx < 0 else 0
+    multi = Multimedia(
+        mime=mime,
+        data=multimedia
+    )
     print(f"sending: '{text}'")
     msg = ChatMessage(
         msg=text,
         userId=usr_id,
-        priority=0
+        priority=0,
+        repliesTo=replies_to,
+        attachment=multi
     )
+
     status = stub.SendMessage(msg)
-    print(status)
+    msg.processedAt = status.processedAt
+    HISTORY.append(msg)
+
+    display_msg(msg)
 
 
 def listen_for_messages(stub, usr_id):
+    
+    request = GetMessagesRequest(userId=usr_id)
+    for msg in stub.GetMessages(request):
+        HISTORY.append(msg)       
+        display_msg(msg)
 
-    listening = True
-
-    def update(label, stub, usr_id):
-        request = GetMessagesRequest(userId=usr_id)
-        for msg in stub.GetMessages(request):
-            print(f"{msg.userId} say {msg.msg}")
-
-            label.insert(tk.END, f"{msg.userId}: {msg.msg}")
-
-            if not listening:
-                break
-
-    root = Tk()
-    root.geometry("250x170")
-    T = Text(root, height = 5, width = 52)
-
-    b1 = Button(root, text = "Next", )
-    b2 = Button(root, text="Exit", command = root.destroy)
-
-    T.pack()
-    b1.pack()
-    b2.pack()
-
-    th = Thread(target=update, args=(T, stub, usr_id))
-    th.start()
-    tk.mainloop()
-
-    listening = False
-    th.join()
-
-    print("finished listening")
+        if not RUNNING:
+            break
     
 
 def listen_for_input(stub, usr_id):
+
     while RUNNING:
         text = input(">>")
         if text == 'stop':
             break
         if text:
-            send_msg(stub, text, usr_id)
+            reply_idx = 0
+            multi = b'\0'
+            mime = ""
+
+            if text[:2] == "-r":
+                reply_idx = -1
+                text = text.replace("-r", "")
+            if "-m" in text:
+                multi = bytes([1, 2, 3, 4])     
+                text = text.replace("-m", "")
+                mime = "image/jpeg"
+            send_msg(stub, text, usr_id, reply_idx, multi, mime)
 
 
 if __name__ == '__main__':
@@ -92,7 +99,7 @@ if __name__ == '__main__':
         # # allow grpc pings from client without data every 5 seconds
 
     ]
-    
+
     with grpc.insecure_channel(f'localhost:{PORT_NUMBER}', options=options) as channel:
         stub = GroupManagerStub(channel)
         join(stub, GROUP, USER)
@@ -103,6 +110,5 @@ if __name__ == '__main__':
         th_write.start()
 
         th_listen.join()
-        RUNNING = False
         th_write.join()
     

@@ -14,7 +14,7 @@ class GroupManager(GroupManagerServicer):
 
 
     def JoinGroup(self, request, context):
-        logger.debug(f"{type(request)}: \n{request}")
+        logger.debug(f"{type(request)}: \n{request}, {type(context)}")
 
         if request.userId in self._group_members:
             logger.debug(f"Refused - user connected in {self._group_members[request.userId]}")
@@ -36,11 +36,21 @@ class GroupManager(GroupManagerServicer):
     def GetMessages(self, request, context):
         logger.debug(f"{type(request)}: \n\t{request}")
 
+        OPEN = True
+
+        def _unregister_peer():
+            nonlocal OPEN 
+            logger.debug(f"user {request.userId} disconnected")
+            OPEN = False 
+
+        if not context.add_callback(_unregister_peer):
+            return 
+        
         if request.userId not in self._group_members:
             print("returned")
             return
 
-        while True:
+        while OPEN:
             messages = self._repo.fetch_messages(request.userId, self._group_members[request.userId])
             for msg in messages:
                 print(f"yielded: {msg}")
@@ -63,5 +73,5 @@ class GroupManager(GroupManagerServicer):
         return StatusResponse(
             status=StatusResponse.Status.OK,
             info=f"",
+            processedAt=request.processedAt # this one is set in repository
         )
-        

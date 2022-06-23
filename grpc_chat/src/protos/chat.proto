@@ -5,8 +5,12 @@ message ChatMessage {
     string userId = 2;
     uint32 priority = 3;
     Multimedia attachment = 4;
-    uint32 repliesTo = 5;
+    uint32 repliesTo = 5; // processedAt of some message
+    
+    // in real application, those would be timestamps
+    uint32 processedAt = 6;
 }
+
 
 message Multimedia {
     string mime = 1;
@@ -31,6 +35,7 @@ message StatusResponse {
     }
     Status status = 1;
     string info = 2;
+    uint32 processedAt = 6;
 }
 
 message GetMessagesRequest {

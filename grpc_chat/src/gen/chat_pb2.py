@@ -14,7 +14,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\nchat.proto\"p\n\x0b\x43hatMessage\x12\x0b\n\x03msg\x18\x01 \x01(\t\x12\x0e\n\x06userId\x18\x02 \x01(\t\x12\x10\n\x08priority\x18\x03 \x01(\r\x12\x1f\n\nattachment\x18\x04 \x01(\x0b\x32\x0b.Multimedia\x12\x11\n\trepliesTo\x18\x05 \x01(\r\"(\n\nMultimedia\x12\x0c\n\x04mime\x18\x01 \x01(\t\x12\x0c\n\x04\x64\x61ta\x18\x02 \x01(\x0c\".\n\x0bJoinRequest\x12\x0e\n\x06userId\x18\x01 \x01(\t\x12\x0f\n\x07groupId\x18\x02 \x01(\t\"d\n\x0eStatusResponse\x12&\n\x06status\x18\x01 \x01(\x0e\x32\x16.StatusResponse.Status\x12\x0c\n\x04info\x18\x02 \x01(\t\"\x1c\n\x06Status\x12\n\n\x06NOT_OK\x10\x00\x12\x06\n\x02OK\x10\x01\"$\n\x12GetMessagesRequest\x12\x0e\n\x06userId\x18\x01 \x01(\t2\xa2\x01\n\x0cGroupManager\x12,\n\tJoinGroup\x12\x0c.JoinRequest\x1a\x0f.StatusResponse\"\x00\x12\x34\n\x0bGetMessages\x12\x13.GetMessagesRequest\x1a\x0c.ChatMessage\"\x00\x30\x01\x12.\n\x0bSendMessage\x12\x0c.ChatMessage\x1a\x0f.StatusResponse\"\x00\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\nchat.proto\"\x85\x01\n\x0b\x43hatMessage\x12\x0b\n\x03msg\x18\x01 \x01(\t\x12\x0e\n\x06userId\x18\x02 \x01(\t\x12\x10\n\x08priority\x18\x03 \x01(\r\x12\x1f\n\nattachment\x18\x04 \x01(\x0b\x32\x0b.Multimedia\x12\x11\n\trepliesTo\x18\x05 \x01(\r\x12\x13\n\x0bprocessedAt\x18\x07 \x01(\r\"(\n\nMultimedia\x12\x0c\n\x04mime\x18\x01 \x01(\t\x12\x0c\n\x04\x64\x61ta\x18\x02 \x01(\x0c\".\n\x0bJoinRequest\x12\x0e\n\x06userId\x18\x01 \x01(\t\x12\x0f\n\x07groupId\x18\x02 \x01(\t\"y\n\x0eStatusResponse\x12&\n\x06status\x18\x01 \x01(\x0e\x32\x16.StatusResponse.Status\x12\x0c\n\x04info\x18\x02 \x01(\t\x12\x13\n\x0bprocessedAt\x18\x06 \x01(\r\"\x1c\n\x06Status\x12\n\n\x06NOT_OK\x10\x00\x12\x06\n\x02OK\x10\x01\"$\n\x12GetMessagesRequest\x12\x0e\n\x06userId\x18\x01 \x01(\t2\xa2\x01\n\x0cGroupManager\x12,\n\tJoinGroup\x12\x0c.JoinRequest\x1a\x0f.StatusResponse\"\x00\x12\x34\n\x0bGetMessages\x12\x13.GetMessagesRequest\x1a\x0c.ChatMessage\"\x00\x30\x01\x12.\n\x0bSendMessage\x12\x0c.ChatMessage\x1a\x0f.StatusResponse\"\x00\x62\x06proto3')
 
 
 
@@ -63,18 +63,18 @@ _GROUPMANAGER = DESCRIPTOR.services_by_name['GroupManager']
 if _descriptor._USE_C_DESCRIPTORS == False:
 
   DESCRIPTOR._options = None
-  _CHATMESSAGE._serialized_start=14
-  _CHATMESSAGE._serialized_end=126
-  _MULTIMEDIA._serialized_start=128
-  _MULTIMEDIA._serialized_end=168
-  _JOINREQUEST._serialized_start=170
-  _JOINREQUEST._serialized_end=216
-  _STATUSRESPONSE._serialized_start=218
-  _STATUSRESPONSE._serialized_end=318
-  _STATUSRESPONSE_STATUS._serialized_start=290
-  _STATUSRESPONSE_STATUS._serialized_end=318
-  _GETMESSAGESREQUEST._serialized_start=320
-  _GETMESSAGESREQUEST._serialized_end=356
-  _GROUPMANAGER._serialized_start=359
-  _GROUPMANAGER._serialized_end=521
+  _CHATMESSAGE._serialized_start=15
+  _CHATMESSAGE._serialized_end=148
+  _MULTIMEDIA._serialized_start=150
+  _MULTIMEDIA._serialized_end=190
+  _JOINREQUEST._serialized_start=192
+  _JOINREQUEST._serialized_end=238
+  _STATUSRESPONSE._serialized_start=240
+  _STATUSRESPONSE._serialized_end=361
+  _STATUSRESPONSE_STATUS._serialized_start=333
+  _STATUSRESPONSE_STATUS._serialized_end=361
+  _GETMESSAGESREQUEST._serialized_start=363
+  _GETMESSAGESREQUEST._serialized_end=399
+  _GROUPMANAGER._serialized_start=402
+  _GROUPMANAGER._serialized_end=564
 # @@protoc_insertion_point(module_scope)

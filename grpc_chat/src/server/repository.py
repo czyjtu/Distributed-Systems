@@ -2,7 +2,7 @@ from server import ROOT_PATH
 from gen.chat_pb2 import ChatMessage
 from collections import defaultdict
 from pathlib import Path
-
+from threading import RLock
 
 class MessageRepository:
     def __init__(self, cache_path: Path = ROOT_PATH / "chat_cache/cache.json"):
@@ -13,14 +13,18 @@ class MessageRepository:
         #     with open(cache_path, "r") as f:
         #         cache = json.load(f)
 
+        self._lock = RLock()
         self._data: dict[str, list[ChatMessage]] = defaultdict(list, cache)
-        self._client_position: dict[str:int] = defaultdict(lambda: 0)
+        self._client_position: dict[str, int] = defaultdict(lambda: 0)
 
     def get_messages(self, group_id: str) -> list[ChatMessage]:
         return self._data.get(group_id, [])
 
     def add_message(self, group_id: str, msg: ChatMessage) -> None:
-        self._data[group_id].append(msg)
+        with self._lock:
+            msg.processedAt = len(self._data[group_id]) + 1
+            self._data[group_id].append(msg)
+
 
     def fetch_messages(self, client_id: str, group_id: str) -> list[ChatMessage]:
         last_msg_pos = len(self._data[group_id])
@@ -28,6 +32,8 @@ class MessageRepository:
         result = self._data[group_id][current_pos:last_msg_pos]
         self._client_position[client_id] = last_msg_pos
         return [msg for msg in result if msg.userId != client_id]
+
+
 
     def save(self) -> None:
         raise NotImplementedError
